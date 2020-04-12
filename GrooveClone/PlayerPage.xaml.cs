@@ -1,5 +1,6 @@
 ﻿using GrooveClone.Models;
 using MediaManager;
+using MediaManager.Library;
 using MediaManager.Player;
 using System;
 using System.Collections.Generic;
@@ -16,12 +17,29 @@ namespace GrooveClone
     public partial class PlayerPage : ContentPage
     {
         private double posval;
+        int Current = 0;
 
         public TimeSpan Pausetime { get; private set; }
         public bool Pausedornot { get; private set; }
-
-        public PlayerPage(Song song)
+        public IList<string> songs = new List<string> { };
+        public List<Song> Songs { get; set; }
+        public PlayerPage(int songindex,List<Song> songList)
         {
+            
+            Songs = songList;
+            Song song = Songs[songindex];
+            
+            for(int i = songindex; i < Songs.Count; i++)
+            {
+                songs.Add(Songs[i].Path);
+                if(i==Songs.Count - 1)
+                {
+                    for(int c = songindex-1; c >= 0; c--)
+                    {
+                        songs.Add(Songs[c].Path);
+                    }
+                }
+            }
             CrossMediaManager.Current.PositionChanged += Current_PositionChanged;
             CrossMediaManager.Current.StateChanged += Current_StateChanged;
             InitializeComponent();
@@ -32,7 +50,7 @@ namespace GrooveClone
             AlbumLabel.Text = song.Album;
             ArtistLabel.Text = song.Artist;
             TotalLabel.Text = song.Duration;
-            CrossMediaManager.Current.Play(song.Path);
+            CrossMediaManager.Current.Play(songs);
             Pausedornot = false;
             Pausetime = new TimeSpan(0, 0, 0);
 
@@ -62,7 +80,7 @@ namespace GrooveClone
                 MainSlider.Value = posval;
                 Device.BeginInvokeOnMainThread(() =>
                 {
-                    ElapsedLabel.Text = CrossMediaManager.Current.Position.ToString().Substring(0, 8);
+                    ElapsedLabel.Text = CrossMediaManager.Current.Position.ToString().Substring(4, 4);
                 });
 
             }
@@ -90,10 +108,35 @@ namespace GrooveClone
 
         private async void PreviousTapped(object sender, EventArgs e)
         {
-            
+            try
+            {
+                await CrossMediaManager.Current.PlayPrevious();
+                if(CrossMediaManager.Current.Position < new TimeSpan(0, 0, 3))
+                {
+                    Current--;
+                    Populate(songs[Current]);
+                }
+                
+            }
+            catch(Exception u)
+            {
+                Current++;
+            }
             
         }
-
+        private async void NextTapped(object sender, EventArgs e)
+        {
+            try
+            {
+                await CrossMediaManager.Current.PlayNext();
+                Current++;
+                Populate(songs[Current]);
+            }
+            catch (Exception u)
+            {
+                Current--;
+            }
+        }
         private async void PlayTapped(object sender, EventArgs e)
         {
             if (CrossMediaManager.Current.IsPlaying())
@@ -112,9 +155,18 @@ namespace GrooveClone
             }
         }
 
-        private void NextTapped(object sender, EventArgs e)
-        {
+        
 
+        public void Populate(string path)
+        {
+            Song song = Songs.First(item => item.Path == path);
+            ImageSource image = song.imageSource();
+            BackImage.Source = image;
+            MainImage.Source = image;
+            TitleLabel.Text = song.Title;
+            AlbumLabel.Text = song.Album;
+            ArtistLabel.Text = song.Artist;
+            TotalLabel.Text = song.Duration;
         }
 
         private void ShuffleTapped(object sender, EventArgs e)

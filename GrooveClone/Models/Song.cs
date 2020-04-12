@@ -11,6 +11,7 @@ namespace GrooveClone.Models
         public string Album { get; set; }
         public string Title { get; set; }
         public string Artist { get; set; }
+        public int Index { get; set; }
         public string Duration { get; set; }
         public byte[] Img { get; set; } 
         public string Path { get; set; }
