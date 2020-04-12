@@ -3,9 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/sliding_tabs"
     android:layout_width="match_parent"
+    android:padding = "@dimen/fastscroll_margin"
     android:layout_height="wrap_content"
     android:background="?attr/colorPrimary"
     android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-    app:tabIndicatorColor="@android:color/white"
+    app:tabIndicatorColor="@color/cardview_dark_background"
     app:tabGravity="fill"
-    app:tabMode="fixed" />
+    app:tabMode="scrollable" />

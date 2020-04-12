@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MediaManager;
+using System;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
@@ -9,8 +10,8 @@ namespace GrooveClone
         public App()
         {
             InitializeComponent();
-
-            MainPage = new MainPage();
+            //CrossMediaManager.Current.Init();
+            MainPage = new NavigationPage(new MainPage());
         }
 
         protected override void OnStart()

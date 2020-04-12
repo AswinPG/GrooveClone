@@ -1,0 +1,103 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="GrooveClone.test"
+    xmlns="http://xamarin.com/schemas/2014/forms"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:d="http://xamarin.com/schemas/2014/forms/design"
+    xmlns:ff="clr-namespace:FFImageLoading.Svg.Forms;assembly=FFImageLoading.Svg.Forms"
+    xmlns:ff2="clr-namespace:FFImageLoading.Forms;assembly=FFImageLoading.Forms"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="Songs"
+    BackgroundColor="Black"
+    mc:Ignorable="d">
+    <ContentPage.Content>
+        <StackLayout Padding="15">
+            <StackLayout Orientation="Horizontal">
+                <Label
+                    FontFamily="OpenSans-Regular"
+                    Text="Refine : "
+                    TextColor="White" />
+                <Label
+                    FontFamily="OpenSans-Regular"
+                    Text="Date Added"
+                    TextColor="Yellow" />
+            </StackLayout>
+            <StackLayout
+                Margin="0,15,0,0"
+                Orientation="Horizontal"
+                Spacing="10">
+                <ff:SvgCachedImage HeightRequest="10" Source="musicplayer.svg" />
+                <Label
+                    FontFamily="OpenSans-Regular"
+                    Text="Shuffle All"
+                    TextColor="White" />
+            </StackLayout>
+            <CollectionView
+                x:Name="MainCollectionView"
+                Margin="0,20,0,0"
+                SelectionChanged="MainCollectionView_SelectionChanged"
+                SelectionMode="Single">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid
+                            Padding="0,10,0,10"
+                            BackgroundColor="Black"
+                            ColumnSpacing="10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="7*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Label
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                FontFamily="OpenSans-Regular"
+                                Text="{Binding Title}"
+                                TextColor="White" />
+                            <ScrollView
+                                x:Name="MainScrollView"
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Orientation="Horizontal">
+                                <StackLayout Orientation="Horizontal">
+                                    <Label
+                                        x:Name="Lab1"
+                                        FontFamily="OpenSans-Regular"
+                                        Text="{Binding Album}"
+                                        TextColor="White" />
+                                    <Label
+                                        FontFamily="OpenSans-Regular"
+                                        Text="  -  "
+                                        TextColor="White" />
+                                    <Label
+                                        x:Name="Lab2"
+                                        FontFamily="OpenSans-Regular"
+                                        Text="{Binding Artist}"
+                                        TextColor="White" />
+                                </StackLayout>
+                            </ScrollView>
+
+                            <Label
+                                Grid.Row="0"
+                                Grid.RowSpan="2"
+                                Grid.Column="1"
+                                FontFamily="OpenSans-Regular"
+                                Text="{Binding Duration}"
+                                TextColor="White"
+                                VerticalOptions="Center" />
+                            <Image Source="{Binding imageSource}" />
+                        </Grid>
+
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <Button Clicked="Button_Clicked_1" Text="Test" />
+            <ff2:CachedImage x:Name="MainImage" />
+
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>
