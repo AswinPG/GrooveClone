@@ -19,11 +19,15 @@ namespace GrooveClone
         private double posval;
         int Current = 0;
         int TotalCount;
+        public ImageSource image { get; set; }
+        public string PlayingTitle { get; set; }
         Song PreviousSong { get; set; }
         Song NextSong { get; set; }
         Song CurrentSong { get; set; }
 
         public TimeSpan Pausetime { get; private set; }
+
+        public bool PauseSkip = false;
         public bool Pausedornot { get; private set; }
         public IList<string> songs = new List<string> { };
         private double HalfWidth;
@@ -62,11 +66,12 @@ namespace GrooveClone
             }
             CrossMediaManager.Current.PositionChanged += Current_PositionChanged;
             CrossMediaManager.Current.StateChanged += Current_StateChanged;
-            
-            ImageSource image = song.imageSource();
+            CrossMediaManager.Current.RepeatMode = MediaManager.Playback.RepeatMode.Off;
+            image = song.imageSource();
             BackImage.Source = image;
             MainImage.Source = image;
             TitleLabel.Text = song.Title;
+            PlayingTitle = song.Title;
             AlbumLabel.Text = song.Album;
             ArtistLabel.Text = song.Artist;
             TotalLabel.Text = song.Duration;
@@ -76,71 +81,110 @@ namespace GrooveClone
             Pausetime = new TimeSpan(0, 0, 0);
             
             MainCollectionView.ItemsSource = Songs;
-            
+            QueueData.Player = this;
+            QueueData.CurrentQueue = songs;
+            QueueData.CurrentList = Songs;
             
         }
+        
 
-        private async void Current_StateChanged(object sender, MediaManager.Playback.StateChangedEventArgs e)
+        public async void Current_StateChanged(object sender, MediaManager.Playback.StateChangedEventArgs e)
         {
-            if (e.State == MediaPlayerState.Playing)
+            try
             {
-                if (Pausetime != new TimeSpan(0, 0, 0))
+                if (e.State == MediaPlayerState.Playing)
                 {
-                    await CrossMediaManager.Current.SeekTo(Pausetime);
-                    if (Pausedornot)
+                    if (Pausetime != new TimeSpan(0, 0, 0) && !PauseSkip)
                     {
-                        Pausetime = new TimeSpan(0, 0, 0);
+                        await CrossMediaManager.Current.SeekTo(Pausetime);
+                        if (Pausedornot)
+                        {
+                            Pausetime = new TimeSpan(0, 0, 0);
+                        }
+                    }
+                    if (PauseSkip)
+                    {
+                        await CrossMediaManager.Current.PlayQueueItem(Current);
+                        PauseSkip = false;
+                        if (Pausedornot)
+                        {
+                            Pausetime = new TimeSpan(0, 0, 0);
+                        }
                     }
                 }
             }
-        }
-
-        private void Current_PositionChanged(object sender, MediaManager.Playback.PositionChangedEventArgs e)
-        {
-            posval = CrossMediaManager.Current.Position.TotalSeconds / CrossMediaManager.Current.Duration.TotalSeconds;
-
-            if (posval > 0 || posval < 1)
+            catch(Exception y)
             {
-                MainSlider.Value = posval;
-                Device.BeginInvokeOnMainThread(() =>
-                {
-                    ElapsedLabel.Text = CrossMediaManager.Current.Position.ToString().Substring(4, 4);
-                });
 
             }
         }
 
-        private void Button_Clicked(object sender, EventArgs e)
+        public void Current_PositionChanged(object sender, MediaManager.Playback.PositionChangedEventArgs e)
+        {
+            try
+            {
+                posval = CrossMediaManager.Current.Position.TotalSeconds / CrossMediaManager.Current.Duration.TotalSeconds;
+
+                if (posval > 0 || posval < 1)
+                {
+                    MainSlider.Value = posval;
+                    Device.BeginInvokeOnMainThread(() =>
+                    {
+                        ElapsedLabel.Text = CrossMediaManager.Current.Position.ToString().Substring(4, 4);
+                    });
+
+                }
+            }
+            catch(Exception n)
+            {
+
+            }
+            
+        }
+
+        public void Button_Clicked(object sender, EventArgs e)
         {
             CrossMediaManager.Current.PlayPause();
         }
 
-        private void MainSlider_ValueChanged(object sender, ValueChangedEventArgs e)
-        {
-            TimeSpan timeSpan1 = CrossMediaManager.Current.Position;
-            TimeSpan timeSpan = TimeSpan.FromSeconds(e.NewValue * CrossMediaManager.Current.Duration.TotalSeconds);
-            if (timeSpan1 - timeSpan > new TimeSpan(0, 0, 2) || timeSpan1 - timeSpan < new TimeSpan(0, 0, 0))
-            {
-
-                CrossMediaManager.Current.SeekTo(timeSpan);
-            }
-            if (MainSlider.Value >= .99)
-            {
-                MainSlider.Value = 0;
-            }
-        }
-
-        private async void PreviousTapped(object sender, EventArgs e)
+        public void MainSlider_ValueChanged(object sender, ValueChangedEventArgs e)
         {
             try
             {
-                await CrossMediaManager.Current.Play();
+                TimeSpan timeSpan1 = CrossMediaManager.Current.Position;
+                TimeSpan timeSpan = TimeSpan.FromSeconds(e.NewValue * CrossMediaManager.Current.Duration.TotalSeconds);
+                if (timeSpan1 - timeSpan > new TimeSpan(0, 0, 2) || timeSpan1 - timeSpan < new TimeSpan(0, 0, 0))
+                {
+
+                    CrossMediaManager.Current.SeekTo(timeSpan);
+                }
+                if (MainSlider.Value >= .99)
+                {
+                    MainSlider.Value = 0;
+                }
+            }
+            catch(Exception g)
+            {
+
+            }
+            
+        }
+
+        public async void PreviousTapped(object sender, EventArgs e)
+        {
+            try
+            {
+                //await CrossMediaManager.Current.Play();
                 await CrossMediaManager.Current.PlayPrevious();
                 if(CrossMediaManager.Current.Position < new TimeSpan(0, 0, 3))
                 {
                     Current--;
                     Populate(Current);
                     LoadView();
+                    if (CrossMediaManager.Current.State == MediaPlayerState.Stopped)
+                    {
+                        PauseSkip = true;
+                    }
                 }
                 
             }
@@ -155,38 +199,55 @@ namespace GrooveClone
         {
             try
             {
-                await CrossMediaManager.Current.Play();
+                //await CrossMediaManager.Current.Play();
                 Current--;
                 Populate(Current);
                 await CrossMediaManager.Current.SeekTo( new TimeSpan(0, 0, 0));
                 await CrossMediaManager.Current.PlayPrevious();
                 
                 LoadView();
+                if (CrossMediaManager.Current.State == MediaPlayerState.Stopped)
+                {
+                    PauseSkip = true;
+                }
             }
             catch(Exception t)
             {
                 Current++;
                 LoadView();
+                if (CrossMediaManager.Current.State == MediaPlayerState.Stopped)
+                {
+                    PauseSkip = true;
+                }
             }
         }
-        private async void NextTapped(object sender, EventArgs e)
+        public async void NextTapped(object sender, EventArgs e)
         {
             try
             {
-                await CrossMediaManager.Current.Play();
+                //await CrossMediaManager.Current.Play();
                 Current++;
                 Populate(Current);
                 await CrossMediaManager.Current.PlayNext();
                 
                 LoadView();
+                if(CrossMediaManager.Current.State == MediaPlayerState.Stopped)
+                {
+                    PauseSkip = true;
+                }
             }
             catch (Exception u)
             {
                 Current--;
+                await CrossMediaManager.Current.PlayPrevious();
                 LoadView();
+                if (CrossMediaManager.Current.State == MediaPlayerState.Stopped)
+                {
+                    PauseSkip = true;
+                }
             }
         }
-        private async void PlayTapped(object sender, EventArgs e)
+        public async void PlayTapped(object sender, EventArgs e)
         {
             if (CrossMediaManager.Current.IsPlaying())
             {
@@ -201,6 +262,7 @@ namespace GrooveClone
                 await CrossMediaManager.Current.Play();
                 Pausedornot = true;
                 PlayPauseSvg.Source = "Pause.svg";
+
             }
         }
 
@@ -209,10 +271,11 @@ namespace GrooveClone
         public void Populate(int path)
         {
             Song song = Songs[path];
-            ImageSource image = song.imageSource();
+            image = song.imageSource();
             BackImage.Source = image;
             MainImage.Source = image;
             TitleLabel.Text = song.Title;
+            PlayingTitle = song.Title;
             AlbumLabel.Text = song.Album;
             ArtistLabel.Text = song.Artist;
             TotalLabel.Text = song.Duration;
@@ -245,17 +308,17 @@ namespace GrooveClone
             
         }
 
-        private void ShuffleTapped(object sender, EventArgs e)
+        public void ShuffleTapped(object sender, EventArgs e)
         {
             ShufleBox.IsVisible = true;
         }
 
-        private void RepeatTapped(object sender, EventArgs e)
+        public void RepeatTapped(object sender, EventArgs e)
         {
             RepeatBox.IsVisible = true;
         }
 
-        private async void TranslateOriginal()
+        public async void TranslateOriginal()
         {
             MainGrid.IsVisible = false;
             MainCollectionView.FadeTo(0);
@@ -271,19 +334,19 @@ namespace GrooveClone
             MainGrid1.TranslationX = -(Application.Current.MainPage.Width);
             //CollectionStack.TranslationY = Application.Current.MainPage.Height;
         }
-        private async void TranslateOriginalAnimate()
+        public async void TranslateOriginalAnimate()
         {
             MainGrid2.TranslateTo(Application.Current.MainPage.Width, 0);
             MainGrid1.TranslateTo(-(Application.Current.MainPage.Width), 0);
             //CollectionStack.TranslationY = Application.Current.MainPage.Height;
             await MainGrid.TranslateTo(0, 0);
         }
-        private async Task<bool> AwaiterF()
+        public async Task<bool> AwaiterF()
         {
             await Task.Delay(5);
             return true;
         }
-        private void LoadView()
+        public void LoadView()
         {
             if (PreviousSong != null)
             {
@@ -299,7 +362,7 @@ namespace GrooveClone
             }
         }
 
-        private async void PanGestureRecognizer_PanUpdated(object sender, PanUpdatedEventArgs e)
+        public async void PanGestureRecognizer_PanUpdated(object sender, PanUpdatedEventArgs e)
         {
             switch (e.StatusType)
             {
@@ -358,16 +421,20 @@ namespace GrooveClone
             }
         }
 
-        private async void MainCollectionView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        public async void MainCollectionView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             int index = Math.Abs((((Song)e.CurrentSelection[0]).Index - Songindex) % TotalCount);
             await CrossMediaManager.Current.PlayQueueItem(index);
             Current = index;
             Populate(Current);
             LoadView();
+            if (CrossMediaManager.Current.State == MediaPlayerState.Stopped)
+            {
+                PauseSkip = true;
+            }
         }
 
-        private void TapGestureRecognizer_Tapped(object sender, EventArgs e)
+        public void TapGestureRecognizer_Tapped(object sender, EventArgs e)
         {
             TranslateOriginal(); 
         }

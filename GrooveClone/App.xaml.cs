@@ -1,4 +1,5 @@
-﻿using MediaManager;
+﻿using GrooveClone.Models;
+using MediaManager;
 using System;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
@@ -11,7 +12,9 @@ namespace GrooveClone
         {
             InitializeComponent();
             //CrossMediaManager.Current.Init();
+            QueueData.Init();
             MainPage = new NavigationPage(new MainPage());
+
         }
 
         protected override void OnStart()
