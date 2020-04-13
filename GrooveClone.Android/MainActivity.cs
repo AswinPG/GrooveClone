@@ -8,6 +8,7 @@ using Android.Widget;
 using Android.OS;
 using FFImageLoading.Forms.Platform;
 using MediaManager;
+using Xamarin.Forms;
 
 namespace GrooveClone.Droid
 {
@@ -20,8 +21,8 @@ namespace GrooveClone.Droid
             ToolbarResource = Resource.Layout.Toolbar;
             CachedImageRenderer.Init(true);
             base.OnCreate(savedInstanceState);
-            
 
+            Forms.SetFlags("SwipeView_Experimental");
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
             global::Xamarin.Forms.Forms.Init(this, savedInstanceState);
             CrossMediaManager.Current.Init();

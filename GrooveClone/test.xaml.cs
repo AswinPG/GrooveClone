@@ -111,5 +111,10 @@ namespace GrooveClone
         {
             GetData();
         }
+
+        private void SwipeItem_Invoked(object sender, EventArgs e)
+        {
+            Song x =(Song)((SwipeItem)sender).CommandParameter;
+        }
     }
 }

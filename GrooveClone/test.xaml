@@ -32,6 +32,7 @@
                     Text="Shuffle All"
                     TextColor="White" />
             </StackLayout>
+
             <CollectionView
                 x:Name="MainCollectionView"
                 Margin="0,20,0,0"
@@ -39,6 +40,7 @@
                 SelectionMode="Single">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
+
                         <Grid
                             Padding="0,10,0,10"
                             BackgroundColor="Black"
